@@ -1,12 +1,7 @@
-# fakeDMSdata
+import src.rnastructure as rnastructure
+from tqdm import tqdm
+import src.util as util
 
-Generate fake DMS signal using RNAstructure pairing probabilities.
-
-The function `createFakeData` reads a fasta file and outputs a dict with reference, sequence and synthetic DMS signal. It is located in `createFakeData.py`.
-
-## Function description
-
-```Python
 def createFakeData(fasta_file, rnastructure_path='', sequencer_noise=0.001):
     """
     Reads a fasta file and outputs a dict with reference, sequence and synthetic DMS signal.
@@ -26,4 +21,19 @@ def createFakeData(fasta_file, rnastructure_path='', sequencer_noise=0.001):
         
     """
 
-```
+    # Read the fasta file and get the list of sequences
+    data = util.fastaToDict(fasta_file)
+
+    # Predict RNA structures for each sequence using RNAstructures
+    rna = rnastructure.RNAstructure(rnastructure_path)
+    for ref, vals in tqdm(data.items(), desc='Predicting RNA structures', total=len(data), unit='seq'):
+        data[ref]['fakeDMS'] = rna.predictPairingProbability(vals['sequence'], ref)
+    
+    # Add sequencer noise to the DMS signal
+    for ref, vals in data.items():
+        data[ref]['fakeDMS'] = [x + sequencer_noise for x in vals['fakeDMS']]        
+    
+    return data
+
+if __name__ == '__main__':
+    print(createFakeData('testData/refs.fasta'))
