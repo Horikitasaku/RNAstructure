@@ -1,6 +1,6 @@
 # fakeDMSdata
 
-Generate fake DMS signal using RNAstructure pairing probabilities, to train our models until we get the experimental data.
+Generate fake DMS signal using [RNAstructure pairing probabilities](https://rna.urmc.rochester.edu/Text/ProbabilityPlot.html), to train our models until we get the experimental data.
 
 The function `createFakeData` reads a fasta file and outputs a dict with reference, sequence and synthetic DMS signal. It is located in `createFakeData.py`.
 
