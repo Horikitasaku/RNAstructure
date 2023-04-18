@@ -19,6 +19,6 @@ def fastaToDict(fasta_file):
                 break
             assert ref[0] == '>', 'The reference should start with ">"'
             
-            refSeq[ref[1:].strip()] = {'sequence': seq.strip()}
+            refSeq[ref[1:].strip()] = {'sequence': seq.strip().upper()}
     
     return refSeq

@@ -44,6 +44,9 @@ class RNAstructure(object):
         # cast: two bases being paired together => probability for each base of being paired with anyone 
         df = df.groupby(['i']).sum().drop(columns=['j'])
 
+        # add p=0 for bases that are not paired with anyone
+        df = df.reindex(range(1, len(self.sequence)+1), fill_value=0)
+
         # Logs sum can lead to a probability > 1, but it should never be > 1.05. So we'll sanity check that, then cap it at 1.
         assert (df['p'] >= 0).all() and (df['p'] <= 1.05).all(), 'The probability is not between 0 and 1.05, something is wrong. Check the log sum.'
         df['p'] = df['p'].apply(lambda x: min(x, 1))
