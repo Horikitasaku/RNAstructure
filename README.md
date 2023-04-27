@@ -1,6 +1,6 @@
 # RNAstructure
 
-A python wrapper for [RNAstructure](https://rna.urmc.rochester.edu/RNAstructure.html).
+A python wrapper for [RNAstructure (Matthews lab @Rochester)](https://rna.urmc.rochester.edu/RNAstructure.html).
 
 The function `predictDMS` reads a fasta file and outputs a dict with the reference, the sequence, the structure and a base-pairing (bp) probability prediction array that can be used as a synthetic normalized DMS signal.
 
