@@ -9,9 +9,9 @@ def run_command(cmd):
     return output.decode('utf-8')
 
 class RNAstructure(object): 
-    def __init__(self, rnastructure_path) -> None:
+    def __init__(self, rnastructure_path, temp_dir='temp') -> None:
         self.rnastructure_path = os.path.join(rnastructure_path)
-        self.directory = 'temp'
+        self.directory = temp_dir
 
     def predict_partition(self, temperature_k =None):
         # predict the partition of rna structures
@@ -81,6 +81,18 @@ class RNAstructure(object):
         self.__make_files()
         self.__create_fasta_file(reference, sequence)
         return self.predict_partition()
+    
+    def predictStructure(self, sequence):
+        self.sequence = sequence
+        self.__make_temp_folder()
+        self.__make_files()
+        self.__create_fasta_file('reference', sequence)
+        cmd = f"{os.path.join(self.rnastructure_path, 'Fold')} {self.fasta_file} {self.ct_file}"
+        run_command(cmd)
+        cmd = f"{os.path.join(self.rnastructure_path, 'ct2dot')} {self.ct_file} 0 {self.dot_file}"
+        run_command(cmd)
+        with open(self.dot_file, 'r') as f:
+            return f.readlines()[2].strip()
     
 
 if __name__ == "__main__":

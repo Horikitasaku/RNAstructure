@@ -1,3 +1,5 @@
+import numpy as np
+
 def fastaToDict(fasta_file):
     """
     Reads a fasta file and returns a dictionary {sequence: reference}.
@@ -22,3 +24,15 @@ def fastaToDict(fasta_file):
             refSeq[ref[1:].strip()] = {'sequence': seq.strip().upper()}
     
     return refSeq
+
+
+def addBinomialNoise(signal, n, p):
+    """Add binomial noise to a signal.
+
+    Args:
+        signal (list): The signal to add noise to.
+        n (int): The number of trials.
+        p (float): The probability of success.        
+    """
+    
+    return list(np.array(signal) + np.random.binomial(n, p, len(signal)) / n)
