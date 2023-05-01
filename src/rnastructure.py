@@ -13,11 +13,16 @@ class RNAstructure(object):
         self.rnastructure_path = os.path.join(rnastructure_path)
         self.directory = temp_dir
 
-    def predict_partition(self, temperature_k =None):
+    def predict_partition(self, temperature_k =None, dms = None):
         # predict the partition of rna structures
         cmd = f"{os.path.join(self.rnastructure_path, 'partition')} {self.fasta_file} {self.pfs_file}"
         if temperature_k != None:
             cmd += ' --temperature '+str(temperature_k)
+        if type(dms) != type(None):
+            assert len(self.sequence) == len(dms), 'The length of the sequence is not the same as the length of the signal.'
+            assert type(dms) in [list, tuple, np.ndarray], 'The dms signal should be a list of floats.'
+            self.__write_dms_to_file(self.sequence, dms)
+            cmd += ' --dms ' + self.dms_file
         run_command(cmd)
         
         # sum it into pairing probability
@@ -55,6 +60,16 @@ class RNAstructure(object):
         assert len(df) == len(self.sequence), 'The number of bases in the sequence is not the same as the number of bases in the prediction.'
         
         return df['p'].tolist()
+    
+    def __write_dms_to_file(self, sequence, signal):
+        
+        assert len(sequence) == len(signal), 'The length of the sequence is not the same as the length of the signal.'
+        
+        with open(self.dms_file, 'w') as f:
+            for idx, (s, b) in enumerate(zip(signal, sequence)):
+                if b in 'AC':
+                    f.write(f'{idx+1}\t{s}\n')
+            
         
     def __make_temp_folder(self):
         isExist = os.path.exists(self.directory)
@@ -65,6 +80,7 @@ class RNAstructure(object):
     def __make_files(self, temp_prefix='temp'):
         self.pfs_file = f"{self.directory}/{temp_prefix}.pfs"
         self.ct_file = f"{self.directory}/{temp_prefix}.ct"
+        self.dms_file = f"{self.directory}/{temp_prefix}.shape"
         self.dot_file = f"{self.directory}/{temp_prefix}_dot.txt"
         self.fasta_file = self.directory+'/'+temp_prefix+'.fasta'
         self.prob_file = self.directory+'/'+temp_prefix+'_prob.txt'
@@ -75,19 +91,24 @@ class RNAstructure(object):
         temp_fasta.write('>'+reference+'\n'+sequence)
         temp_fasta.close()
 
-    def predictPairingProbability(self, sequence, reference = 'reference'):
+    def predictPairingProbability(self, sequence, reference = 'reference', dms = None):
         self.sequence = sequence
         self.__make_temp_folder()
         self.__make_files()
         self.__create_fasta_file(reference, sequence)
-        return self.predict_partition()
+        return self.predict_partition(dms = dms)
     
-    def predictStructure(self, sequence):
+    def predictStructure(self, sequence, dms = None):
         self.sequence = sequence
         self.__make_temp_folder()
         self.__make_files()
         self.__create_fasta_file('reference', sequence)
         cmd = f"{os.path.join(self.rnastructure_path, 'Fold')} {self.fasta_file} {self.ct_file}"
+        if type(dms) != type(None):
+            assert len(sequence) == len(dms), 'The length of the sequence is not the same as the length of the signal.'
+            assert type(dms) in [list, tuple, np.ndarray], 'The dms signal should be a list of floats.'
+            self.__write_dms_to_file(sequence, dms)
+            cmd += ' --dms ' + self.dms_file 
         run_command(cmd)
         cmd = f"{os.path.join(self.rnastructure_path, 'ct2dot')} {self.ct_file} 0 {self.dot_file}"
         run_command(cmd)
@@ -97,6 +118,11 @@ class RNAstructure(object):
 
 if __name__ == "__main__":
     rna = RNAstructure('/Users/ymdt/src/RNAstructure/exe')
-    print("One line command:", rna.predictPairingProbability('AAGATATTCGAAAGAATATCTT'))
+    seq = 'TTAAACCGGCCAACATACCGCATATGAGGATCACCCATATGCTCAAGATATTCGAAAGAATATCTTTCCACAGTCGAAAGACTGTGTCTCTCTCTTCCTTTTTCTCTTCCTCTTTCTCTTTCTCTTTCTCTTCTCTTCTGTATTACGAGTTCGCTACTCGTTCCTTTCGA'
+    dms = np.random.random(len(seq))
+    print(
+        rna.predictStructure(seq, dms=dms),
+        rna.predictPairingProbability(seq, dms=dms)
+        )
 
     
