@@ -36,3 +36,23 @@ def addBinomialNoise(signal, n, p):
     """
     
     return list(np.array(signal) + np.random.binomial(n, p, len(signal)) / n)
+
+
+def get_pair_from_ct_line(line):
+    while '  ' in line:
+        line = line.replace('  ',' ')
+    line = [l for l in line.split(' ') if l != '']
+    return int(line[0]), int(line[4])
+
+def ct2list(ctfile):
+    pairs = []
+    f = open(ctfile, 'r')
+    L = int([l for l in f.readline().split(' ') if l != ''][0])
+        
+    for _ in range(L):
+        l = f.readline()
+        b1, b2 = get_pair_from_ct_line(l)
+        if b2: 
+            pairs.append((b1,b2))
+
+    return pairs

@@ -50,7 +50,7 @@ def predictFromFasta(fasta_file, rnastructure_path='', temp_dir = 'temp', predic
     return output
 
 
-def predictFromSequence(sequence, rnastructure_path='',  temp_dir = 'temp', predict_structure = True, predict_pairing_probability = True, constraints = [], dms = None, sequencer_noise=0, matrix = False):
+def predictFromSequence(sequence, rnastructure_path='',  temp_dir = 'temp', predict_structure = True, predict_pairing_probability = True, constraints = [], dms = None, sequencer_noise=0, predict_pairs = False):
     """
     Reads a RNA sequence and a list of constraints, and outputs a dict with reference, sequence and base-pairing prediction.
 
@@ -59,10 +59,10 @@ def predictFromSequence(sequence, rnastructure_path='',  temp_dir = 'temp', pred
         rnastructure_path (str): The path to the RNAstructure executable. Default is '' (i.e. RNAstructure is in the PATH).
         predict_structure (bool): Add structure prediction to the output.
         predict_pairing_probability (bool): Add pairing prediction to the output.
+        predict_pairs (bool): Add predicted pairs to the output.
         constraints (list): A list of 1-based indexes of nucleotides that are constrained to be unpaired. Default is [].
         dms (list): A list of DMS reactivities, with the same length as the sequence. Used as an input to RNAstructure. Default is None.
         sequencer_noise (float): The amount of sequencer noise to add to the base-pairing prediction. Default is 0. The noise follows a binomial distribution B(n=3000, p=sequencer_noise).
-        matrix (bool): make predict_pairing_probability a 2D matrix
     
     Returns:
         data (dict): A dictionary with sequence / main structure / pairing probability.
@@ -92,11 +92,14 @@ def predictFromSequence(sequence, rnastructure_path='',  temp_dir = 'temp', pred
         output['structure'] = rna.predictStructure(sequence, dms=dms)
         
     if predict_pairing_probability:
-        output['pairing'] = rna.predictPairingProbability(sequence, dms=dms, matrix=matrix)
+        output['pairing'] = rna.predictPairingProbability(sequence, dms=dms)
         # add sequencer noise
         if sequencer_noise > 0:
             output['pairing'] = util.addBinomialNoise(signal=output['pairing'], n=3000, p=sequencer_noise)
-        
+    
+    if predict_pairs:
+        output['list_pairs'] = rna.predictPairs(sequence, dms)    
+    
     return output
 
 
@@ -107,8 +110,8 @@ if __name__=='__main__':
     print(predictFromSequence(
         'TTAAACCGGCCAACATACCGCATATGAGGATCACCCATATGCTCAAGATATTCGAAAGAATATCTTTCCACAGTCGAAAGACTGTGTCTCTCTCTTCCTTTTTCTCTTCCTCTTTCTCTTTCTCTTTCTCTTCTCTTCTGTATTACGAGTTCGCTACTCGTTCCTTTCGA',
         dms = np.random.random(170),
-        rnastructure_path='/Users/ymdt/src/RNAstructure/exe',
-        matrix = True))
+        predict_pairs= True,
+        rnastructure_path='/Users/ymdt/src/RNAstructure/exe'))
     print(predictFromFasta(
         rnastructure_path='/Users/ymdt/src/RNAstructure/exe',
         fasta_file='testData/refs.fasta')
