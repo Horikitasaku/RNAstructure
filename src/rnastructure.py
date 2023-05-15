@@ -13,7 +13,8 @@ class RNAstructure(object):
         self.rnastructure_path = os.path.join(rnastructure_path)
         self.directory = temp_dir
 
-    def predict_partition(self, temperature_k =None, dms = None):
+
+    def predict_partition(self, temperature_k =None, dms = None, matrix = False):
         # predict the partition of rna structures
         cmd = f"{os.path.join(self.rnastructure_path, 'partition')} {self.fasta_file} {self.pfs_file}"
         if temperature_k != None:
@@ -22,7 +23,7 @@ class RNAstructure(object):
             assert len(self.sequence) == len(dms), 'The length of the sequence is not the same as the length of the signal.'
             assert type(dms) in [list, tuple, np.ndarray], 'The dms signal should be a list of floats.'
             self.__write_dms_to_file(self.sequence, dms)
-            cmd += ' --dms ' + self.dms_file
+            cmd += ' --shape ' + self.dms_file
         run_command(cmd)
         
         # sum it into pairing probability
@@ -45,6 +46,9 @@ class RNAstructure(object):
         
         # add the reverse complement so that when we sum, we get the probability of each base being paired with anyone
         df = pd.concat([df, df.rename(columns={'i':'j', 'j':'i'})])
+        
+        if matrix:
+            return pd.pivot_table(df, 'p', 'i', 'j')
         
         # cast: two bases being paired together => probability for each base of being paired with anyone 
         df = df.groupby(['i']).sum().drop(columns=['j'])
@@ -91,12 +95,12 @@ class RNAstructure(object):
         temp_fasta.write('>'+reference+'\n'+sequence)
         temp_fasta.close()
 
-    def predictPairingProbability(self, sequence, reference = 'reference', dms = None):
+    def predictPairingProbability(self, sequence, reference = 'reference', dms = None, matrix = False):
         self.sequence = sequence
         self.__make_temp_folder()
         self.__make_files()
         self.__create_fasta_file(reference, sequence)
-        return self.predict_partition(dms = dms)
+        return self.predict_partition(dms = dms, matrix=matrix)
     
     def predictStructure(self, sequence, dms = None):
         self.sequence = sequence
@@ -108,7 +112,7 @@ class RNAstructure(object):
             assert len(sequence) == len(dms), 'The length of the sequence is not the same as the length of the signal.'
             assert type(dms) in [list, tuple, np.ndarray], 'The dms signal should be a list of floats.'
             self.__write_dms_to_file(sequence, dms)
-            cmd += ' --dms ' + self.dms_file 
+            cmd += ' --shape ' + self.dms_file 
         run_command(cmd)
         cmd = f"{os.path.join(self.rnastructure_path, 'ct2dot')} {self.ct_file} 0 {self.dot_file}"
         run_command(cmd)
@@ -122,7 +126,8 @@ if __name__ == "__main__":
     dms = np.random.random(len(seq))
     print(
         rna.predictStructure(seq, dms=dms),
-        rna.predictPairingProbability(seq, dms=dms)
+        rna.predictPairingProbability(seq, dms=dms),
+        rna.predictPairingProbability(seq, dms=dms, matrix = True),
         )
 
     
