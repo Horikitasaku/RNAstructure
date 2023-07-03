@@ -125,7 +125,7 @@ class RNAstructure(object):
             assert len(sequence) == len(dms), 'The length of the sequence is not the same as the length of the signal.'
             assert type(dms) in [list, tuple, np.ndarray], 'The dms signal should be a list of floats.'
             self.__write_dms_to_file(sequence, dms)
-            cmd += ' --shape ' + self.dms_file 
+            cmd += ' --DMS ' + self.dms_file 
         run_command(cmd)
         cmd = f"{os.path.join(self.rnastructure_path, 'ct2dot')} {self.ct_file} 0 {self.dot_file}"
         run_command(cmd)
