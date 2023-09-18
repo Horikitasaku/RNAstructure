@@ -50,7 +50,7 @@ def predictFromFasta(fasta_file, rnastructure_path='', temp_dir = 'temp', predic
     return output
 
 
-def predictFromSequence(sequence, rnastructure_path='',  temp_dir = 'temp', predict_structure = True, predict_pairing_probability = True, constraints = [], dms = None, sequencer_noise=0, predict_pairs = False):
+def predictFromSequence(sequence, rnastructure_path='', only_pair=False,  temp_dir = 'temp', predict_structure = True, predict_pairing_probability = True, constraints = [], dms = None, sequencer_noise=0, predict_pairs = False):
     """
     Reads a RNA sequence and a list of constraints, and outputs a dict with reference, sequence and base-pairing prediction.
 
@@ -83,7 +83,8 @@ def predictFromSequence(sequence, rnastructure_path='',  temp_dir = 'temp', pred
     # predict structure and pairing probability
     rna = rnastructure.RNAstructure(rnastructure_path, temp_dir)
     output = {'sequence': sequence}
-
+    if only_pair:
+        return rna.predictPairingProbability(sequence, dms=dms)
     # make sequence lower when there are constraints => RNAstructure will use the constraints
     for c in constraints:
         sequence = sequence[:c-1] + sequence[c-1].lower() + sequence[c:]
@@ -106,13 +107,13 @@ def predictFromSequence(sequence, rnastructure_path='',  temp_dir = 'temp', pred
 if __name__=='__main__':
     print(predictFromSequence(
         'TTAAACCGGCCAACATACCGCATATGAGGATCACCCATATGCTCAAGATATTCGAAAGAATATCTTTCCACAGTCGAAAGACTGTGTCTCTCTCTTCCTTTTTCTCTTCCTCTTTCTCTTTCTCTTTCTCTTCTCTTCTGTATTACGAGTTCGCTACTCGTTCCTTTCGA',
-        rnastructure_path='/Users/ymdt/src/RNAstructure/exe'))
+        rnastructure_path='D:/Code/kaggle/RNA_Folding/RNA-FM-Transformer/RNAstructure/RNAstructure/exe'))
     print(predictFromSequence(
         'TTAAACCGGCCAACATACCGCATATGAGGATCACCCATATGCTCAAGATATTCGAAAGAATATCTTTCCACAGTCGAAAGACTGTGTCTCTCTCTTCCTTTTTCTCTTCCTCTTTCTCTTTCTCTTTCTCTTCTCTTCTGTATTACGAGTTCGCTACTCGTTCCTTTCGA',
         dms = np.random.random(170),
         predict_pairs= True,
-        rnastructure_path='/Users/ymdt/src/RNAstructure/exe'))
+        rnastructure_path='D:/Code/kaggle/RNA_Folding/RNA-FM-Transformer/RNAstructure/RNAstructure/exe'))
     print(predictFromFasta(
-        rnastructure_path='/Users/ymdt/src/RNAstructure/exe',
+        rnastructure_path='D:/Code/kaggle/RNA_Folding/RNA-FM-Transformer/RNAstructure/RNAstructure/exe',
         fasta_file='testData/refs.fasta')
     )
